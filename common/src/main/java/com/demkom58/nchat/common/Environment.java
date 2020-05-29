@@ -2,6 +2,8 @@ package com.demkom58.nchat.common;
 
 import lombok.experimental.UtilityClass;
 
+import java.io.File;
+
 @UtilityClass
 public class Environment {
     public static final int PORT = 55555;
@@ -15,5 +17,5 @@ public class Environment {
 
     public static final int CONNECTIONS_PER_IP = 3;
     public static final int MESSAGES_PER_SECOND = 3;
-    public static final String DATA_PATH = System.getenv("APPDATA") + "/NChat/";
+    public static final File DATA_DIRECTORY = new File(System.getenv("APPDATA"), "NChat");
 }

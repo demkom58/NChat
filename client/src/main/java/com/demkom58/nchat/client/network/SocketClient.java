@@ -1,8 +1,8 @@
 package com.demkom58.nchat.client.network;
 
+import com.demkom58.nchat.client.Client;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.epoll.Epoll;
@@ -19,15 +19,13 @@ import org.slf4j.LoggerFactory;
 import java.net.InetSocketAddress;
 
 public abstract class SocketClient {
-    private static final Logger LOGGER = LoggerFactory.getLogger(SocketClient.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SocketClient.class.getTypeName());
     private static Channel channel;
 
     private final EventLoopGroup eventLoopGroup;
     private final Bootstrap bootstrap;
 
-    private ChannelFuture channelFuture = null;
-
-    public SocketClient() {
+    public SocketClient(Client client) {
         final boolean epoll = Epoll.isAvailable();
         final boolean kQueue = KQueue.isAvailable();
 
@@ -39,7 +37,7 @@ public abstract class SocketClient {
                 .channel(epoll ? EpollSocketChannel.class :
                         (kQueue ? KQueueSocketChannel.class : NioSocketChannel.class))
                 .option(ChannelOption.SO_KEEPALIVE, true)
-                .handler(new ClientInitializer());
+                .handler(new ClientInitializer(client));
     }
 
     public void connect(InetSocketAddress address) {
@@ -75,14 +73,6 @@ public abstract class SocketClient {
 
     public Bootstrap getBootstrap() {
         return bootstrap;
-    }
-
-    public ChannelFuture getChannelFuture() {
-        return channelFuture;
-    }
-
-    public void setChannelFuture(ChannelFuture channelFuture) {
-        this.channelFuture = channelFuture;
     }
 
     public static Logger getLOGGER() {

@@ -1,5 +1,6 @@
 package com.demkom58.nchat.client.network;
 
+import com.demkom58.nchat.client.Client;
 import com.demkom58.nchat.common.network.IPacketHandlerRegistry;
 import com.demkom58.nchat.common.network.PacketHandlerRegistry;
 import com.demkom58.nchat.common.network.handler.PacketCodec;
@@ -14,11 +15,16 @@ import io.netty.handler.codec.compression.ZlibCodecFactory;
 import io.netty.handler.codec.compression.ZlibWrapper;
 
 public class ClientInitializer extends ChannelInitializer<SocketChannel> {
+    private final Client client;
+
+    public ClientInitializer(Client client) {
+        this.client = client;
+    }
 
     @Override
     public void initChannel(SocketChannel ch) {
         IPacketHandlerRegistry packetProcessorRegistry = new PacketHandlerRegistry();
-        packetProcessorRegistry.registerPacketProcessor(new ClientPacketProcessor(ch));
+        packetProcessorRegistry.registerPacketProcessor(new ClientPacketProcessor(ch, client));
 
         ChannelPipeline pipeline = ch.pipeline();
 

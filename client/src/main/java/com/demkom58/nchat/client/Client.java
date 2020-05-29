@@ -24,10 +24,8 @@ import java.io.File;
 import java.util.Objects;
 
 public class Client extends Application {
-    private static final Logger LOGGER = LoggerFactory.getLogger("[Client]");
-    private static final String STYLES_PATH = Environment.DATA_PATH + "styles/";
-
-    private static Client client;
+    private static final Logger LOGGER = LoggerFactory.getLogger(Client.class.getTypeName());
+    private static final File STYLES_DIRECTORY = new File(Environment.DATA_DIRECTORY, "styles");
 
     private final GuiStyleLoader styleLoader = new GuiStyleLoader();
     private GuiManager guiManager;
@@ -36,25 +34,25 @@ public class Client extends Application {
     @Override
     public void start(@NotNull final Stage stage) throws Exception {
         InternalLoggerFactory.setDefaultFactory(Slf4JLoggerFactory.INSTANCE);
-        Client.client = this;
 
         guiManager = new GuiManager(stage);
-        final File[] files = new File(STYLES_PATH).listFiles();
+        final File[] files = STYLES_DIRECTORY.listFiles();
 
-        if (!styleLoader.checkStyleVersion(Environment.DATA_PATH, Environment.STYLING_VERSION) && files != null)
+        if (!styleLoader.checkStyleVersion(Environment.DATA_DIRECTORY, Environment.STYLING_VERSION) && files != null)
             for (File file : files) file.delete();
 
-        styleLoader.exportResource(Environment.class, "/assets/css/style.css", STYLES_PATH);
+        styleLoader.exportResource(Environment.class, "/assets/css/style.css", STYLES_DIRECTORY);
 
-        final FXMLLoader loginLoader = styleLoader.getFXMLLoaderAndExport(Environment.class, "/assets/login.fxml", STYLES_PATH);
-        final FXMLLoader listLoader = styleLoader.getFXMLLoaderAndExport(Environment.class, "/assets/list.fxml", STYLES_PATH);
-        final FXMLLoader chatLoader = styleLoader.getFXMLLoaderAndExport(Environment.class, "/assets/chat.fxml", STYLES_PATH);
+        final FXMLLoader loginLoader = styleLoader.getFXMLLoaderAndExport(Environment.class, "/assets/login.fxml", STYLES_DIRECTORY);
+        final FXMLLoader listLoader = styleLoader.getFXMLLoaderAndExport(Environment.class, "/assets/list.fxml", STYLES_DIRECTORY);
+        final FXMLLoader chatLoader = styleLoader.getFXMLLoaderAndExport(Environment.class, "/assets/chat.fxml", STYLES_DIRECTORY);
 
         guiManager.registerGui(LoginController.class, loginLoader, stage);
         guiManager.registerGui(ListController.class, listLoader, stage);
         guiManager.registerGui(ChatController.class, chatLoader, stage);
 
         LoginController loginController = Objects.requireNonNull(guiManager.getGuiPack(LoginController.class)).getThird();
+        loginController.setClient(this);
         loginController.getIpField().setText(Environment.STANDARD_IP);
 
         guiManager.setAllTransparent();
@@ -77,9 +75,9 @@ public class Client extends Application {
     }
 
 
-    public static void start(@NotNull final OptionSet optionSet) {
+    public static void start(@NotNull final OptionSet options) {
         launch();
-        getLogger().info("NChat v" + Environment.APP_VERSION + " is launching.");
+        LOGGER.info("NChat v" + Environment.APP_VERSION + " is launching.");
     }
 
     public GuiManager getGuiManager() {
@@ -93,14 +91,6 @@ public class Client extends Application {
     @NotNull
     public User getUser() {
         return user;
-    }
-
-    public static Client getClient() {
-        return client;
-    }
-
-    public static Logger getLogger() {
-        return LOGGER;
     }
 
 }

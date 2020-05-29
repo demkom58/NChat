@@ -26,6 +26,8 @@ public class LoginController extends NGuiController {
     @FXML private Label joinButton;
     @FXML private Label listButton;
 
+    private Client client;
+
     /**
      * IP list button pressed.
      */
@@ -73,7 +75,7 @@ public class LoginController extends NGuiController {
         if (nick.length() == 0 || nick.length() > 16 || voidName.length() == 0)
             return;
 
-        Client.getClient().setUser(new User(nick));
+        client.setUser(new User(nick));
         updateGuiNick(nick);
 
         ChatController chatController = Objects.requireNonNull(getGuiManager().getController(ChatController.class));
@@ -92,7 +94,7 @@ public class LoginController extends NGuiController {
 
         try {
             new Thread(() -> {
-                ClientMessenger.setup(serverAddress);
+                ClientMessenger.setup(client, serverAddress);
                 try {
                     ClientMessenger.getClientMessenger().run();
                 } catch (Exception e) {
@@ -132,4 +134,7 @@ public class LoginController extends NGuiController {
         });
     }
 
+    public void setClient(Client client) {
+        this.client = client;
+    }
 }

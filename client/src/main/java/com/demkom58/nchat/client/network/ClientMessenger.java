@@ -19,20 +19,22 @@ import java.net.InetSocketAddress;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class ClientMessenger extends SocketClient {
-    private static final Logger LOGGER = LoggerFactory.getLogger("[CLIENT]");
-
+    private static final Logger LOGGER = LoggerFactory.getLogger(ClientMessenger.class.getTypeName());
     private static final LinkedBlockingQueue<String> messagesQueue = new LinkedBlockingQueue<>();
+
     private static ClientMessenger clientMessenger;
     private static boolean work;
 
-    private final IPacketRegistry packetRegistry;
+    private final IPacketRegistry packetRegistry = new PacketRegistry();
+
+    private final Client client;
     private final InetSocketAddress address;
 
-    public ClientMessenger(@NotNull final InetSocketAddress host) {
-        super();
+    public ClientMessenger(@NotNull final Client client, @NotNull final InetSocketAddress host) {
+        super(client);
 
+        this.client = client;
         this.address = host;
-        this.packetRegistry = new PacketRegistry();
 
         this.packetRegistry.registerPacket(CAuthPacket.class);
         this.packetRegistry.registerPacket(AMessagePacket.class);
@@ -44,20 +46,17 @@ public class ClientMessenger extends SocketClient {
         EventLoopGroup group = new NioEventLoopGroup();
 
         try {
-            User user = Client.getClient().getUser();
             connect(address);
+            User user = client.getUser();
 
             //Send register packet
             sendPacket(new CAuthPacket(user.getName(), Environment.PROTOCOL_VERSION));
 
             while (work) {
                 String message = messagesQueue.take().replace("╥", "");
-                setChannelFuture(sendPacket(new AMessagePacket(message)));
+                sendPacket(new AMessagePacket(message)).syncUninterruptibly();
                 user.addSentMessage();
             }
-
-            if (getChannelFuture() != null)
-                getChannelFuture().sync();
 
         } finally {
             group.shutdownGracefully();
@@ -91,8 +90,8 @@ public class ClientMessenger extends SocketClient {
         work = false;
     }
 
-    public static void setup(@NotNull final InetSocketAddress address) {
-        ClientMessenger.clientMessenger = new ClientMessenger(address);
+    public static void setup(@NotNull final Client client, @NotNull final InetSocketAddress address) {
+        ClientMessenger.clientMessenger = new ClientMessenger(client, address);
     }
 
     public static Logger getLogger() {

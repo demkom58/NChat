@@ -16,6 +16,7 @@ public class PacketEncoder extends MessageToByteEncoder<IPacket<?>> {
     public static byte[] getSymbolBytes() {
         return SYMBOL_BYTES;
     }
+
     public static String getFrameSymbol() {
         return FRAME_SYMBOL;
     }

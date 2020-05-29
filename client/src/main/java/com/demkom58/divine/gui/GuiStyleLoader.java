@@ -18,29 +18,30 @@ public class GuiStyleLoader {
     public @NotNull FXMLLoader getFXMLLoaderAndExport(@NotNull final Class<?> resourceAccessor,
                                                       @NotNull final String fxmlPath,
                                                       @NotNull final String remotePath) throws Exception {
+        return getFXMLLoaderAndExport(resourceAccessor, fxmlPath, new File(remotePath));
+    }
+
+    public @NotNull FXMLLoader getFXMLLoaderAndExport(@NotNull final Class<?> resourceAccessor,
+                                                      @NotNull final String fxmlPath,
+                                                      @NotNull final File remotePath) throws Exception {
         return new FXMLLoader(exportResource(resourceAccessor, fxmlPath, remotePath).toURI().toURL());
     }
 
     public @NotNull File exportResource(@NotNull final Class<?> resourceAccessor,
                                         @NotNull final String localPath,
                                         @NotNull final String remotePath) throws Exception {
-
-        final File remoteResource = new File(remotePath, localPath);
-
-        if (!remoteResource.exists()) {
-            remoteResource.getParentFile().mkdirs();
-            exportResource(resourceAccessor, localPath, remoteResource);
-        }
-
-        return remoteResource;
+        return exportResource(resourceAccessor, localPath, new File(remotePath));
     }
 
-    private void exportResource(@NotNull final Class<?> resourceAccessor,
+    public File exportResource(@NotNull final Class<?> resourceAccessor,
                                 @NotNull final String localPath,
-                                @NotNull final File distFile) throws Exception {
+                                @NotNull final File directory) throws Exception {
+        if (!directory.exists())
+            directory.mkdirs();
 
+        File file = new File(directory, localPath);
         try (InputStream localStream = resourceAccessor.getResourceAsStream(localPath);
-             OutputStream remoteStream = new FileOutputStream(distFile)) {
+             OutputStream remoteStream = new FileOutputStream(file)) {
 
             if (localStream == null)
                 throw new Exception("Cannot get resource \"" + localPath + "\" from Jar file.");
@@ -52,12 +53,14 @@ public class GuiStyleLoader {
                 remoteStream.write(buffer, 0, readBytes);
 
         }
+
+        return file;
     }
 
-    public boolean checkStyleVersion(@NotNull final String path,
+    public boolean checkStyleVersion(@NotNull final File directory,
                                      @NotNull final String currentVersion) throws Exception {
 
-        final File file = new File(path, "style.ver");
+        final File file = new File(directory, "style.ver");
 
         if (file.exists()) {
             final byte[] encoded = Files.readAllBytes(Paths.get(file.getPath()));

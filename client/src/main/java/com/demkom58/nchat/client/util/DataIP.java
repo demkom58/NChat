@@ -18,10 +18,10 @@ import java.util.Scanner;
 
 public class DataIP {
     private static final Logger LOGGER = LoggerFactory.getLogger("DataIP");
-    private static final String SERVER_LIST_FILE_PATH = Environment.DATA_PATH + "srv.list";
+    private static final File SERVER_LIST_FILE = new File(Environment.DATA_DIRECTORY, "srv.list");
 
     public static void saveIP(String ip) {
-        final File file = createFileIfNotExist(SERVER_LIST_FILE_PATH);
+        final File file = createFileIfNotExist(SERVER_LIST_FILE);
 
         try {
             List<String> ips = Files.readAllLines(Paths.get(file.getPath()), StandardCharsets.UTF_8);
@@ -44,7 +44,7 @@ public class DataIP {
 
     public static void saveIPList(List<String> ips) {
         try {
-            final File file = createFileIfNotExist(SERVER_LIST_FILE_PATH);
+            final File file = createFileIfNotExist(SERVER_LIST_FILE);
             final FileWriter writer = new FileWriter(file);
 
             for (String str : ips)
@@ -58,7 +58,7 @@ public class DataIP {
 
     public static List<String> loadIPList() {
         try {
-            File file = createFileIfNotExist(SERVER_LIST_FILE_PATH);
+            File file = createFileIfNotExist(SERVER_LIST_FILE);
             List<String> ips = new ArrayList<>();
 
             Scanner scanner = new Scanner(file);
@@ -71,14 +71,13 @@ public class DataIP {
         return new ArrayList<>();
     }
 
-    private static @NotNull File createFileIfNotExist(@NotNull final String path) {
-        final File file = new File(path);
+    private static @NotNull File createFileIfNotExist(@NotNull final File file) {
 
         if (!file.exists()) {
             try {
                 file.createNewFile();
             } catch (IOException e) {
-                LOGGER.error("Can't create file in path " + path, e);
+                LOGGER.error("Can't create file in path " + file.getAbsolutePath(), e);
                 return file;
             }
         }
