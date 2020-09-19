@@ -1,12 +1,12 @@
 plugins {
-    id 'java'
-    id 'idea'
-    id 'application'
+    id 'org.springframework.boot' version '2.3.3.RELEASE'
+    id 'io.spring.dependency-management' version '1.0.10.RELEASE'
     id "io.freefair.lombok" version "4.1.6"
-    id 'com.github.johnrengelman.shadow' version '5.2.0'
+    id 'application'
 }
 
 mainClassName = "com.demkom58.nchat.Main"
+jar.enabled = true
 
 dependencies {
     compile project(":server")
@@ -14,10 +14,8 @@ dependencies {
 }
 
 allprojects {
-
     apply plugin: 'java'
     apply plugin: 'io.freefair.lombok'
-    apply plugin: 'com.github.johnrengelman.shadow'
 
     generateLombokConfig.enabled = false
 
@@ -30,7 +28,11 @@ allprojects {
     }
 
     repositories {
+        mavenLocal()
+        maven { url 'https://repo.spring.io/milestone' }
+        maven { url 'https://repo.spring.io/snapshot' }
         jcenter()
+        mavenCentral()
     }
 
     dependencies {

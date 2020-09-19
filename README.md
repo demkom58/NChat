@@ -8,3 +8,5 @@
 
 # NChat
 Simple open source netty client-server chat written in java.
+
+If you want get executable fat jar run `gradlew bootJar` in other case it will be thin jar.

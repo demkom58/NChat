@@ -1,5 +1,7 @@
 package com.demkom58.nchat;
 
+import com.demkom58.nchat.client.ClientBoot;
+import com.demkom58.nchat.server.ServerExecutor;
 import joptsimple.OptionParser;
 
 import java.util.Arrays;
@@ -10,9 +12,9 @@ public class Main {
         optionParser.acceptsAll(Arrays.asList("s", "server"));
 
         if (optionParser.parse(args).has("server"))
-            com.demkom58.nchat.server.Main.main(args);
+            ServerExecutor.main(args);
         else
-            com.demkom58.nchat.client.Main.main(args);
+            ClientBoot.main(args);
     }
 
 }

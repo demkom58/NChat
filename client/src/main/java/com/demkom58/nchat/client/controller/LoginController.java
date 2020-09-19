@@ -1,50 +1,64 @@
-package com.demkom58.nchat.client.gui;
+package com.demkom58.nchat.client.controller;
 
-import com.demkom58.divine.gui.GuiController;
-import com.demkom58.nchat.client.Client;
 import com.demkom58.nchat.client.network.ClientMessenger;
-import com.demkom58.nchat.client.network.User;
-import com.demkom58.nchat.client.util.DataIP;
+import com.demkom58.nchat.client.repository.ServersRepository;
+import com.demkom58.nchat.client.repository.StageRepository;
+import com.demkom58.nchat.client.repository.User;
 import com.demkom58.nchat.common.Environment;
 import com.demkom58.nchat.common.network.handler.PacketEncoder;
-import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
+import lombok.Getter;
+import lombok.Setter;
+import net.rgielen.fxweaver.core.FxWeaver;
+import net.rgielen.fxweaver.core.FxmlView;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.net.InetSocketAddress;
-import java.util.Objects;
 import java.util.regex.Pattern;
 
-public class LoginController extends NGuiController {
+@Component
+@FxmlView("/assets/login.fxml")
+public class LoginController extends SimpleViewController {
 
     @FXML private TextField ipField;
     @FXML private TextField loginField;
     @FXML private Label joinButton;
     @FXML private Label listButton;
 
-    private Client client;
+    private final ClientMessenger messenger;
+    private final ServersRepository serversRepository;
+    private final User user; // TODO: user service here
+
+    @Getter
+    @Setter
+    private String ip = "127.0.0.1";
+
+    @Autowired
+    public LoginController(FxWeaver weaver, StageRepository stageRepository, ClientMessenger messenger, ServersRepository serversRepository, User user) {
+        super(weaver, stageRepository);
+        this.messenger = messenger;
+        this.serversRepository = serversRepository;
+        this.user = user;
+    }
+
+    @Override
+    public void show() {
+        super.show();
+        ipField.setText(ip);
+    }
 
     /**
      * IP list button pressed.
      */
     @FXML
     public void onList(MouseEvent event) {
-        final ListController controller = getGuiManager().getController(ListController.class);
-
-        if (controller == null)
-            throw new NullPointerException("List controller not found!");
-
-        final ObservableList<String> ips = controller.getIpList().getItems();
-        if (ips != null) {
-            ips.clear();
-            ips.addAll(DataIP.loadIPList());
-        }
-
-        getGuiManager().setGui(controller);
+        weaver.loadController(ListController.class).show();
     }
 
     /**
@@ -75,13 +89,12 @@ public class LoginController extends NGuiController {
         if (nick.length() == 0 || nick.length() > 16 || voidName.length() == 0)
             return;
 
-        client.setUser(new User(nick));
-        updateGuiNick(nick);
+        user.setName(nick);
 
-        ChatController chatController = Objects.requireNonNull(getGuiManager().getController(ChatController.class));
+        ChatController chatController = weaver.loadController(ChatController.class);
         chatController.getMessagesView().getItems().clear();
         chatController.getMessagesView().refresh();
-        getGuiManager().setGui(chatController);
+        chatController.show();
 
         String fullIp = ipField.getText().isEmpty() ? Environment.STANDARD_IP : ipField.getText();
         String[] split = fullIp.split(Pattern.quote(":"));
@@ -90,20 +103,17 @@ public class LoginController extends NGuiController {
                 split.length < 2 ? Environment.PORT : Integer.parseInt(split[1])
         );
 
-        DataIP.saveIP(fullIp);
+        serversRepository.saveServer(fullIp);
 
-        try {
-            new Thread(() -> {
-                ClientMessenger.setup(client, serverAddress);
-                try {
-                    ClientMessenger.getClientMessenger().run();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }).start();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        final Thread thread = new Thread(() -> {
+            try {
+                messenger.run(serverAddress);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+        thread.setDaemon(true);
+        thread.start();
     }
 
     public Label getListButton() {
@@ -118,23 +128,4 @@ public class LoginController extends NGuiController {
         return loginField;
     }
 
-    public TextField getIpField() {
-        return ipField;
-    }
-
-    public void updateGuiNick(String nick) {
-        final String greeting = "HELLO " + nick.toUpperCase();
-
-        getGuiManager().getGuiMap().values().forEach(e -> {
-            final GuiController controller = e.getThird();
-
-            if (controller instanceof NGuiController)
-                ((NGuiController) controller).getHelloLabel().setText(greeting);
-
-        });
-    }
-
-    public void setClient(Client client) {
-        this.client = client;
-    }
 }

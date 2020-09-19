@@ -1,6 +1,5 @@
 package com.demkom58.nchat.client.network;
 
-import com.demkom58.nchat.client.Client;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelOption;
@@ -13,6 +12,7 @@ import io.netty.channel.kqueue.KQueueEventLoopGroup;
 import io.netty.channel.kqueue.KQueueSocketChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,24 +20,18 @@ import java.net.InetSocketAddress;
 
 public abstract class SocketClient {
     private static final Logger LOGGER = LoggerFactory.getLogger(SocketClient.class.getTypeName());
-    private static Channel channel;
 
-    private final EventLoopGroup eventLoopGroup;
-    private final Bootstrap bootstrap;
+    protected final EventLoopGroup eventLoopGroup;
+    protected final Bootstrap bootstrap;
+    protected Channel channel;
 
-    public SocketClient(Client client) {
-        final boolean epoll = Epoll.isAvailable();
-        final boolean kQueue = KQueue.isAvailable();
-
-        eventLoopGroup = epoll ? new EpollEventLoopGroup() :
-                (kQueue ? new KQueueEventLoopGroup() : new NioEventLoopGroup());
-
+    public SocketClient(ClientInitializer clientInitializer) {
+        eventLoopGroup = createEventLoopGroup();
         bootstrap = new Bootstrap()
                 .group(eventLoopGroup)
-                .channel(epoll ? EpollSocketChannel.class :
-                        (kQueue ? KQueueSocketChannel.class : NioSocketChannel.class))
+                .channel(getNettyChannelClass())
                 .option(ChannelOption.SO_KEEPALIVE, true)
-                .handler(new ClientInitializer(client));
+                .handler(clientInitializer);
     }
 
     public void connect(InetSocketAddress address) {
@@ -59,24 +53,16 @@ public abstract class SocketClient {
 
     }
 
-    public static Channel getChannel() {
-        return channel;
+    protected static @NotNull EventLoopGroup createEventLoopGroup() {
+        return Epoll.isAvailable()
+                ? new EpollEventLoopGroup()
+                : (KQueue.isAvailable() ? new KQueueEventLoopGroup() : new NioEventLoopGroup());
     }
 
-    public static void setChannel(Channel channel) {
-        SocketClient.channel = channel;
-    }
-
-    public EventLoopGroup getEventLoopGroup() {
-        return eventLoopGroup;
-    }
-
-    public Bootstrap getBootstrap() {
-        return bootstrap;
-    }
-
-    public static Logger getLOGGER() {
-        return LOGGER;
+    protected static @NotNull Class<? extends Channel> getNettyChannelClass() {
+        return Epoll.isAvailable()
+                ? EpollSocketChannel.class
+                : (KQueue.isAvailable() ? KQueueSocketChannel.class : NioSocketChannel.class);
     }
 
 }

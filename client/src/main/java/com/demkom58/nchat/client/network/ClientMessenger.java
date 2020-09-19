@@ -1,101 +1,97 @@
 package com.demkom58.nchat.client.network;
 
-import com.demkom58.nchat.client.Client;
+import com.demkom58.nchat.client.event.ShutdownEvent;
+import com.demkom58.nchat.client.repository.User;
 import com.demkom58.nchat.common.Environment;
-import com.demkom58.nchat.common.network.IPacketRegistry;
-import com.demkom58.nchat.common.network.PacketRegistry;
 import com.demkom58.nchat.common.network.packets.Packet;
 import com.demkom58.nchat.common.network.packets.client.CAuthPacket;
-import com.demkom58.nchat.common.network.packets.common.ADisconnectPacket;
 import com.demkom58.nchat.common.network.packets.common.AMessagePacket;
 import io.netty.channel.ChannelFuture;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.nio.NioEventLoopGroup;
 import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.jetbrains.annotations.Nullable;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationListener;
+import org.springframework.stereotype.Component;
 
 import java.net.InetSocketAddress;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
-public class ClientMessenger extends SocketClient {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ClientMessenger.class.getTypeName());
-    private static final LinkedBlockingQueue<String> messagesQueue = new LinkedBlockingQueue<>();
+@Component
+public class ClientMessenger extends SocketClient implements ApplicationListener<ShutdownEvent> {
+    private final Queue<String> messagesQueue = new ConcurrentLinkedQueue<>();
 
-    private static ClientMessenger clientMessenger;
-    private static boolean work;
+    private final ReentrantLock senderLock = new ReentrantLock();
+    private final Condition newUpdate = senderLock.newCondition();
 
-    private final IPacketRegistry packetRegistry = new PacketRegistry();
+    private final User user;
 
-    private final Client client;
-    private final InetSocketAddress address;
+    private boolean working;
+    private InetSocketAddress address;
 
-    public ClientMessenger(@NotNull final Client client, @NotNull final InetSocketAddress host) {
-        super(client);
-
-        this.client = client;
-        this.address = host;
-
-        this.packetRegistry.registerPacket(CAuthPacket.class);
-        this.packetRegistry.registerPacket(AMessagePacket.class);
-        this.packetRegistry.registerPacket(ADisconnectPacket.class);
+    @Autowired
+    public ClientMessenger(ClientInitializer clientInitializer, User user) {
+        super(clientInitializer);
+        this.user = user;
     }
 
-    public void run() throws Exception {
-        ClientMessenger.work = true;
-        EventLoopGroup group = new NioEventLoopGroup();
+    public void run(@NotNull final InetSocketAddress address) throws Exception {
+        this.address = address;
+        this.working = true;
 
         try {
             connect(address);
-            User user = client.getUser();
-
-            //Send register packet
+            // Send register packet
             sendPacket(new CAuthPacket(user.getName(), Environment.PROTOCOL_VERSION));
 
-            while (work) {
-                String message = messagesQueue.take().replace("╥", "");
+            while (working) {
+                senderLock.lock();
+
+                if (messagesQueue.isEmpty()) {
+                    newUpdate.await();
+                    senderLock.unlock();
+                    continue;
+                }
+
+                String message = messagesQueue.poll().replace("╥", "");
+                senderLock.unlock();
                 sendPacket(new AMessagePacket(message)).syncUninterruptibly();
                 user.addSentMessage();
             }
-
         } finally {
-            group.shutdownGracefully();
+            super.eventLoopGroup.shutdownGracefully();
         }
     }
 
-    public IPacketRegistry getPacketRegistry() {
-        return packetRegistry;
-    }
-
     public ChannelFuture sendPacket(Packet<?> packet) {
-        if (getChannel() == null)
+        if (channel == null)
             return null;
 
-        return getChannel().writeAndFlush(packet);
+        return channel.writeAndFlush(packet);
     }
 
     public void sendMessage(String message) {
+        senderLock.lock();
         messagesQueue.offer(message);
+        newUpdate.signalAll();
+        senderLock.unlock();
     }
 
-    public InetSocketAddress getAddress() {
+    public @Nullable InetSocketAddress getAddress() {
         return address;
     }
 
-    public static ClientMessenger getClientMessenger() {
-        return clientMessenger;
+    public void close() {
+        senderLock.lock();
+        working = false;
+        newUpdate.signalAll();
+        senderLock.unlock();
     }
 
-    public static void close() {
-        work = false;
+    @Override
+    public void onApplicationEvent(@NotNull ShutdownEvent event) {
+        close();
     }
-
-    public static void setup(@NotNull final Client client, @NotNull final InetSocketAddress address) {
-        ClientMessenger.clientMessenger = new ClientMessenger(client, address);
-    }
-
-    public static Logger getLogger() {
-        return LOGGER;
-    }
-
 }

@@ -1,9 +1,19 @@
 plugins {
+    id 'org.springframework.boot'
+    id 'io.spring.dependency-management'
     id 'application'
 }
 
 dependencies {
     compile project(":common")
+
+    implementation ('org.springframework.boot:spring-boot-starter') {
+        exclude group: 'ch.qos.logback', module: 'logback-classic'
+    }
+
+    compile group: 'net.rgielen', name: 'javafx-weaver-spring', version: '1.3.0'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
-mainClassName = "com.demkom58.nchat.client.Main"
+mainClassName = "com.demkom58.nchat.client.ClientBoot"
+jar.enabled = true

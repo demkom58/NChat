@@ -1,15 +1,13 @@
-package com.demkom58.nchat.client.network;
+package com.demkom58.nchat.client.repository;
 
 import org.jetbrains.annotations.NotNull;
+import org.springframework.stereotype.Component;
 
+@Component
 public class User {
 
-    @NotNull private String name;
+    private String name = "GUEST";
     private int messagesSent = 0;
-
-    public User(@NotNull final String name) {
-        this.name = name;
-    }
 
     public void setName(@NotNull final String name) {
         this.name = name;

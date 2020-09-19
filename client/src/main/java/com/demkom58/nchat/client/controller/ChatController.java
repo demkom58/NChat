@@ -1,6 +1,7 @@
-package com.demkom58.nchat.client.gui;
+package com.demkom58.nchat.client.controller;
 
 import com.demkom58.nchat.client.network.ClientMessenger;
+import com.demkom58.nchat.client.repository.StageRepository;
 import com.demkom58.nchat.common.Environment;
 import com.demkom58.nchat.common.network.packets.common.ADisconnectPacket;
 import javafx.application.Platform;
@@ -11,30 +12,44 @@ import javafx.scene.control.TextArea;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
+import net.rgielen.fxweaver.core.FxWeaver;
+import net.rgielen.fxweaver.core.FxmlView;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
-public class ChatController extends NGuiController {
+@Component
+@FxmlView("/assets/chat.fxml")
+public class ChatController extends SimpleViewController {
 
     @FXML private ListView<String> messagesView;
     @FXML private Label sendButton;
     @FXML private Label backButton;
     @FXML private TextArea messageArea;
 
+    private final ClientMessenger messenger;
+
+    @Autowired
+    public ChatController(FxWeaver weaver, StageRepository stageRepository, ClientMessenger messenger) {
+        super(weaver, stageRepository);
+        this.messenger = messenger;
+    }
+
     /**
      * Return on Login page.
      */
     @FXML
-    public void onBack(MouseEvent event){
-        ClientMessenger.getClientMessenger().sendPacket(new ADisconnectPacket("Returned in main menu."));
-        ClientMessenger.close();
+    public void onBack(MouseEvent event) {
+        messenger.sendPacket(new ADisconnectPacket("Returned in main menu."));
+        messenger.close();
 
-        getGuiManager().setGui(LoginController.class);
+        weaver.loadController(LoginController.class).show();
     }
 
     /**
      * On Send button pressed.
      */
     @FXML
-    public void onSend(MouseEvent event){
+    public void onSend(MouseEvent event) {
         sendMessage();
     }
 
@@ -82,9 +97,10 @@ public class ChatController extends NGuiController {
      */
     private void sendMessage() {
         String message = getMessageArea().getText();
-        if(message.length() < 1 || message.replace(" ", "").length() < 1) return;
+        if (message.length() < 1 || message.replace(" ", "").length() < 1)
+            return;
 
-        ClientMessenger.getClientMessenger().sendMessage(message.trim());
+        messenger.sendMessage(message.trim());
         Platform.runLater(() -> getMessageArea().clear());
     }
 

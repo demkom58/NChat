@@ -4,7 +4,7 @@
 <?import javafx.scene.Cursor?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.Font?>
-<AnchorPane prefHeight="456.0" prefWidth="671.0" styleClass="transparent" stylesheets="@css/style.css" xmlns="http://javafx.com/javafx/9.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.demkom58.nchat.client.gui.ChatController">
+<AnchorPane prefHeight="456.0" prefWidth="671.0" styleClass="transparent" stylesheets="@css/style.css" xmlns="http://javafx.com/javafx/9.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.demkom58.nchat.client.controller.ChatController">
     <children>
         <AnchorPane prefHeight="50.0" prefWidth="671.0" styleClass="header">
             <children>
@@ -18,7 +18,7 @@
                         <Font name="System Bold" size="20.0" />
                     </font>
                 </Label>
-            <Label fx:id="close1" alignment="CENTER" contentDisplay="CENTER" layoutX="575.0" onMouseClicked="#onClose" prefHeight="50.0" prefWidth="48.0" styleClass="close-button" text="X" textAlignment="CENTER" textFill="WHITE">
+            <Label fx:id="close" alignment="CENTER" contentDisplay="CENTER" layoutX="575.0" onMouseClicked="#onClose" prefHeight="50.0" prefWidth="48.0" styleClass="close-button" text="X" textAlignment="CENTER" textFill="WHITE">
                <font>
                   <Font name="System Bold" size="32.0" />
                </font>

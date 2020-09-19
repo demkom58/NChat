@@ -3,7 +3,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.text.Font?>
-<AnchorPane prefHeight="333.0" prefWidth="257.0" styleClass="transparent" stylesheets="@css/style.css" xmlns="http://javafx.com/javafx/9.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.demkom58.nchat.client.gui.ListController">
+<AnchorPane prefHeight="333.0" prefWidth="257.0" styleClass="transparent" stylesheets="@css/style.css" xmlns="http://javafx.com/javafx/9.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.demkom58.nchat.client.controller.ListController">
     <children>
         <AnchorPane prefHeight="50.0" prefWidth="257.0" styleClass="header">
             <children>

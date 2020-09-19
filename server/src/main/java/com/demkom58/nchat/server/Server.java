@@ -1,6 +1,5 @@
 package com.demkom58.nchat.server;
 
-import com.demkom58.nchat.common.Environment;
 import com.demkom58.nchat.common.network.IPacketRegistry;
 import com.demkom58.nchat.common.network.PacketRegistry;
 import com.demkom58.nchat.common.network.packets.client.CAuthPacket;
@@ -11,7 +10,6 @@ import com.demkom58.nchat.server.network.User;
 import io.netty.channel.Channel;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 import io.netty.util.internal.logging.Slf4JLoggerFactory;
-import joptsimple.OptionSet;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,8 +28,10 @@ public class Server extends SocketServer {
     private final InetSocketAddress address;
     private final IPacketRegistry packetRegistry;
 
-    private Server(@NotNull final InetSocketAddress address) {
-        super();
+    public Server(@NotNull final InetSocketAddress address) {
+        if (server != null)
+            throw new IllegalStateException("Server already initialized");
+        Server.server = this;
 
         this.address = address;
         this.packetRegistry = new PacketRegistry();
@@ -130,26 +130,6 @@ public class Server extends SocketServer {
 
     public static Logger getLogger() {
         return LOGGER;
-    }
-
-    public static synchronized void start(OptionSet optionSet) throws Exception {
-        if (server != null)
-            return;
-
-        String host = optionSet.has("host")
-                ? (String) optionSet.valueOf("host")
-                : null;
-
-        int port = optionSet.has("port")
-                ? Integer.parseInt((String) optionSet.valueOf("port"))
-                : Environment.PORT;
-
-        InetSocketAddress address = host == null
-                ? new InetSocketAddress(port)
-                : new InetSocketAddress(host, port);
-
-        server = new Server(address);
-        server.start();
     }
 
 }

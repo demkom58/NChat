@@ -1,9 +1,17 @@
 plugins {
+    id 'org.springframework.boot'
+    id 'io.spring.dependency-management'
     id 'application'
 }
 
 dependencies {
     compile project(":common")
+
+    implementation ('org.springframework.boot:spring-boot-starter') {
+        exclude group: 'ch.qos.logback', module: 'logback-classic'
+    }
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
-mainClassName = "com.demkom58.nchat.server.Main"
+mainClassName = "com.demkom58.nchat.server.ServerExecutor"
+jar.enabled = true

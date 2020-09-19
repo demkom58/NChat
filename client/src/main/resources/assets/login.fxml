@@ -3,9 +3,9 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.text.*?>
-<AnchorPane prefHeight="333.0" prefWidth="257.0" styleClass="transparent" stylesheets="@css/style.css" xmlns="http://javafx.com/javafx/9.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.demkom58.nchat.client.gui.LoginController">
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="333.0" prefWidth="257.0" styleClass="transparent" stylesheets="@css/style.css" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.demkom58.nchat.client.controller.LoginController">
    <children>
-      <AnchorPane prefHeight="50.0" prefWidth="257.0" styleClass="header">
+      <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="50.0" prefWidth="257.0" styleClass="header">
          <children>
             <Label fx:id="close" alignment="CENTER" contentDisplay="CENTER" layoutX="209.0" onMouseClicked="#onClose" prefHeight="50.0" prefWidth="48.0" styleClass="close-button" text="X" textAlignment="CENTER" textFill="WHITE">
                <font>
@@ -19,7 +19,7 @@
             </Label>
          </children>
       </AnchorPane>
-      <AnchorPane layoutY="131.0" prefHeight="202.0" prefWidth="257.0" styleClass="body">
+      <AnchorPane layoutY="131.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="202.0" prefWidth="257.0" styleClass="body">
          <children>
             <TextField fx:id="loginField" layoutX="14.0" layoutY="75.0" onKeyPressed="#onEnter" prefHeight="36.0" prefWidth="230.0" promptText="Enter your login" style="-fx-background-radius: 0;" styleClass="input" />
             <Label alignment="CENTER" layoutY="176.0" prefHeight="26.0" prefWidth="257.0" styleClass="author" text="DEVELOPED BY DEMKOM58" textFill="WHITE" />
@@ -29,7 +29,7 @@
                </font>
             </Label>
             <Label alignment="CENTER" prefHeight="26.0" prefWidth="257.0" styleClass="auth-h1" text="AUTHORIZATION" textFill="WHITE" />
-            <TextField fx:id="ipField" layoutX="14.0" layoutY="35.0" onKeyPressed="#onEnter" prefHeight="36.0" prefWidth="206.0" promptText="Enter server's IP address" styleClass="input" text="5.79.70.37" />
+            <TextField fx:id="ipField" layoutX="14.0" layoutY="35.0" onKeyPressed="#onEnter" prefHeight="36.0" prefWidth="206.0" promptText="Enter server's IP address" styleClass="input" />
             <Label fx:id="listButton" alignment="CENTER" contentDisplay="CENTER" layoutX="220.0" layoutY="36.0" onMouseClicked="#onList" prefHeight="34.0" prefWidth="23.0" styleClass="input" text="&gt;" textAlignment="CENTER">
                <font>
                   <Font size="18.0" />
@@ -37,7 +37,7 @@
             </Label>
          </children>
       </AnchorPane>
-      <AnchorPane layoutY="65.0" prefHeight="36.0" prefWidth="257.0">
+      <AnchorPane layoutY="65.0" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="36.0" prefWidth="257.0">
          <children>
             <Label alignment="CENTER" layoutY="-3.0" prefHeight="57.0" prefWidth="257.0" styleClass="auth-h1" text="NCHAT" textAlignment="CENTER" textFill="WHITE">
                <font>
