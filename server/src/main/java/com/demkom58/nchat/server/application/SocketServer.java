@@ -1,10 +1,11 @@
-package com.demkom58.nchat.server;
+package com.demkom58.nchat.server.application;
 
 import com.demkom58.nchat.server.network.ServerInitializer;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
+import io.netty.channel.ServerChannel;
 import io.netty.channel.epoll.Epoll;
 import io.netty.channel.epoll.EpollEventLoopGroup;
 import io.netty.channel.epoll.EpollServerSocketChannel;
@@ -16,6 +17,7 @@ import io.netty.channel.kqueue.KQueueServerSocketChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.util.concurrent.GlobalEventExecutor;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,23 +32,15 @@ public abstract class SocketServer {
     private final EventLoopGroup bossGroup;
     private final EventLoopGroup workerGroup;
 
-    public SocketServer() {
-        final boolean epoll = Epoll.isAvailable();
-        final boolean kQueue = KQueue.isAvailable();
-
-        this.bossGroup = epoll ? new EpollEventLoopGroup() :
-                (kQueue ? new KQueueEventLoopGroup() : new NioEventLoopGroup());
-
-        this.workerGroup = epoll ? new EpollEventLoopGroup() :
-                (kQueue ? new KQueueEventLoopGroup() : new NioEventLoopGroup());
+    public SocketServer(ServerInitializer serverInitializer) {
+        this.bossGroup = createEventLoopGroup();
+        this.workerGroup = createEventLoopGroup();
 
         this.bootstrap = new ServerBootstrap()
                 .group(bossGroup, workerGroup)
-                .channel(epoll ? EpollServerSocketChannel.class :
-                        (kQueue ? KQueueServerSocketChannel.class : NioServerSocketChannel.class))
-
+                .channel(getNettyServerChannelClass())
                 //.handler(new LoggingHandler(LogLevel.INFO))
-                .childHandler(new ServerInitializer())
+                .childHandler(serverInitializer)
 
                 .option(ChannelOption.SO_BACKLOG, 128)
                 .childOption(ChannelOption.SO_KEEPALIVE, true);
@@ -75,6 +69,18 @@ public abstract class SocketServer {
 
     public Collection<Channel> getChannels() {
         return CHANNELS;
+    }
+
+    protected static @NotNull EventLoopGroup createEventLoopGroup() {
+        return Epoll.isAvailable()
+                ? new EpollEventLoopGroup()
+                : (KQueue.isAvailable() ? new KQueueEventLoopGroup() : new NioEventLoopGroup());
+    }
+
+    protected static @NotNull Class<? extends ServerChannel> getNettyServerChannelClass() {
+        return Epoll.isAvailable()
+                ? EpollServerSocketChannel.class
+                : (KQueue.isAvailable() ? KQueueServerSocketChannel.class : NioServerSocketChannel.class);
     }
 
 }

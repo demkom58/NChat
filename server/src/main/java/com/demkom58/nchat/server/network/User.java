@@ -3,10 +3,11 @@ package com.demkom58.nchat.server.network;
 import com.demkom58.nchat.common.network.packets.IPacket;
 import com.demkom58.nchat.common.network.packets.common.AMessagePacket;
 import com.demkom58.nchat.common.network.util.NetworkUtil;
-import com.demkom58.nchat.server.Server;
+import com.demkom58.nchat.server.application.Server;
 import io.netty.channel.Channel;
 
 public class User {
+    private final Server server;
     private final Channel channel;
     private final String nick;
 
@@ -16,7 +17,8 @@ public class User {
 
     private long lastSentMessageTime = 0L;
 
-    public User(Channel channel, String nick) {
+    public User(Server server, Channel channel, String nick) {
+        this.server = server;
         this.channel = channel;
         this.nick = nick;
 
@@ -28,6 +30,7 @@ public class User {
     public String getNick() {
         return nick;
     }
+
     public Channel getChannel() {
         return channel;
     }
@@ -35,9 +38,11 @@ public class User {
     public String getAddress() {
         return address;
     }
+
     public String getIP() {
         return ip;
     }
+
     public int getPort() {
         return port;
     }
@@ -45,6 +50,7 @@ public class User {
     public long getLastSentMessageTime() {
         return lastSentMessageTime;
     }
+
     public void setLastSentMessageTime(long lastSentMessageTime) {
         this.lastSentMessageTime = lastSentMessageTime;
     }
@@ -52,17 +58,19 @@ public class User {
     public void sendMessage(String message) {
         User.sendMessage(getChannel(), message);
     }
+
     public void sendPacket(IPacket<?> packet) {
         User.sendPacket(getChannel(), packet);
     }
 
     public void kick(String reason) {
-        Server.getServer().kickUser(this, reason);
+        server.kickUser(this, reason);
     }
 
     public static void sendMessage(Channel channel, String message) {
         channel.writeAndFlush(new AMessagePacket(message));
     }
+
     public static void sendPacket(Channel channel, IPacket<?> packet) {
         channel.writeAndFlush(packet);
     }

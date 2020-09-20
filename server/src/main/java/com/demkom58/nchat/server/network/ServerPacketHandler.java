@@ -4,7 +4,7 @@ import com.demkom58.nchat.common.Environment;
 import com.demkom58.nchat.common.network.IPacketHandlerRegistry;
 import com.demkom58.nchat.common.network.handler.PacketHandler;
 import com.demkom58.nchat.common.network.util.NetworkUtil;
-import com.demkom58.nchat.server.Server;
+import com.demkom58.nchat.server.application.Server;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import org.slf4j.Logger;
@@ -13,17 +13,18 @@ import org.slf4j.LoggerFactory;
 import java.util.Collection;
 
 public class ServerPacketHandler extends PacketHandler {
-    private static final Logger LOGGER = LoggerFactory.getLogger("[SHandler]");
+    private static final Logger LOGGER = LoggerFactory.getLogger(ServerPacketHandler.class);
+    private final Server server;
 
-    public ServerPacketHandler(IPacketHandlerRegistry packetProcessorRegistry) {
+    public ServerPacketHandler(Server server, IPacketHandlerRegistry packetProcessorRegistry) {
         super(packetProcessorRegistry);
+        this.server = server;
     }
 
     @Override
     public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
         super.handlerAdded(ctx);
 
-        Server server = Server.getServer();
         Collection<User> users = server.getUsers();
 
         int connections = 0;
@@ -32,7 +33,6 @@ public class ServerPacketHandler extends PacketHandler {
         Channel incoming = ctx.channel();
 
         for (User user : users) {
-
             if (address.equals(user.getIP()))
                 connections += 1;
 
@@ -53,21 +53,18 @@ public class ServerPacketHandler extends PacketHandler {
 
     @Override
     public void handlerRemoved(ChannelHandlerContext ctx) {
-        if(!Server.getServer().getChannels().contains(ctx.channel())
-                && !Server.getServer().getRegisteredChannels().contains(ctx.channel()))
+        if (!server.getChannels().contains(ctx.channel())
+                && !server.getRegisteredChannels().contains(ctx.channel()))
             return;
 
-        Channel channel = ctx.channel();
-        Server server = Server.getServer();
-
-        server.removeUser(channel);
+        server.removeUser(ctx.channel());
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         Channel channel = ctx.channel();
 
-        String reason = "Connection["+ NetworkUtil.getAddress(channel)+"] Exception caught: " + cause.getMessage();
+        String reason = "Connection[" + NetworkUtil.getAddress(channel) + "] Exception caught: " + cause.getMessage();
         LOGGER.warn(reason);
 
         handlerRemoved(ctx);

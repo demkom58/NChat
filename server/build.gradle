@@ -13,5 +13,5 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
-mainClassName = "com.demkom58.nchat.server.ServerExecutor"
+mainClassName = "com.demkom58.nchat.server.ServerBoot"
 jar.enabled = true

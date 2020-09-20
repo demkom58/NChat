@@ -1,11 +1,10 @@
-package com.demkom58.nchat.server;
+package com.demkom58.nchat.server.application;
 
 import com.demkom58.nchat.common.network.IPacketRegistry;
-import com.demkom58.nchat.common.network.PacketRegistry;
-import com.demkom58.nchat.common.network.packets.client.CAuthPacket;
 import com.demkom58.nchat.common.network.packets.common.ADisconnectPacket;
-import com.demkom58.nchat.common.network.packets.common.AMessagePacket;
 import com.demkom58.nchat.common.network.util.NetworkUtil;
+import com.demkom58.nchat.server.network.ServerInitializer;
+import com.demkom58.nchat.server.network.ServerPacketRegistry;
 import com.demkom58.nchat.server.network.User;
 import io.netty.channel.Channel;
 import io.netty.util.internal.logging.InternalLoggerFactory;
@@ -13,40 +12,38 @@ import io.netty.util.internal.logging.Slf4JLoggerFactory;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.Map;
 import java.util.WeakHashMap;
 
+@Component
 public class Server extends SocketServer {
-    private static Server server;
+    private static final Logger LOGGER = LoggerFactory.getLogger(Server.class);
 
-    private static final Logger LOGGER = LoggerFactory.getLogger("[SERVER]");
-    private static final Map<Channel, User> regMap = new WeakHashMap<>();
-
+    private final Map<Channel, User> regMap = new WeakHashMap<>();
     private final InetSocketAddress address;
     private final IPacketRegistry packetRegistry;
 
-    public Server(@NotNull final InetSocketAddress address) {
-        if (server != null)
-            throw new IllegalStateException("Server already initialized");
-        Server.server = this;
+    @Autowired
+    public Server(@NotNull final InetSocketAddress address,
+                  @NotNull final ServerInitializer initializer,
+                  @NotNull final ServerPacketRegistry packetRegistry) {
+        super(initializer);
 
         this.address = address;
-        this.packetRegistry = new PacketRegistry();
-
-        this.packetRegistry.registerPacket(CAuthPacket.class);
-        this.packetRegistry.registerPacket(AMessagePacket.class);
-        this.packetRegistry.registerPacket(ADisconnectPacket.class);
+        this.packetRegistry = packetRegistry;
     }
 
     public void start() {
         InternalLoggerFactory.setDefaultFactory(Slf4JLoggerFactory.INSTANCE);
-        getLogger().info("Starting server on {}:{}.", address.getHostName(), address.getPort());
+        LOGGER.info("Starting server on {}:{}.", address.getHostName(), address.getPort());
 
         try {
-            getLogger().info("Waiting for connections...");
+            LOGGER.info("Waiting for connections...");
             bind(address);
         } finally {
             stop();
@@ -55,11 +52,11 @@ public class Server extends SocketServer {
     }
 
     public User getUser(Channel channel) {
-        return getRegisterMap().get(channel);
+        return regMap.get(channel);
     }
 
     public void registerUser(Channel channel, User user) {
-        getRegisterMap().put(channel, user);
+        regMap.put(channel, user);
     }
 
     public void kickUser(User user, String reason) {
@@ -90,7 +87,7 @@ public class Server extends SocketServer {
 
     public void removeUser(Channel channel) {
         getChannels().remove(channel);
-        getRegisterMap().remove(channel);
+        regMap.remove(channel);
         channel.close();
     }
 
@@ -113,23 +110,11 @@ public class Server extends SocketServer {
     }
 
     public Collection<User> getUsers() {
-        return getRegisterMap().values();
+        return regMap.values();
     }
 
     public Collection<Channel> getRegisteredChannels() {
-        return getRegisterMap().keySet();
-    }
-
-    private Map<Channel, User> getRegisterMap() {
-        return regMap;
-    }
-
-    public static Server getServer() {
-        return Server.server;
-    }
-
-    public static Logger getLogger() {
-        return LOGGER;
+        return regMap.keySet();
     }
 
 }
