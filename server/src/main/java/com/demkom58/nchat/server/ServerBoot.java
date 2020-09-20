@@ -19,7 +19,7 @@ import java.util.Arrays;
 
 @SpringBootApplication
 public class ServerBoot {
-    public static OptionSet options;
+    private static OptionSet options;
     private static ConfigurableApplicationContext context;
 
     public static void main(@NotNull final String... args) throws Exception {
