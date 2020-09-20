@@ -18,7 +18,7 @@ import java.util.List;
 
 @Repository
 public class ServersRepository {
-    private static final Logger LOGGER = LoggerFactory.getLogger("DataIP");
+    private static final Logger LOGGER = LoggerFactory.getLogger(ServersRepository.class);
     private final File serverListFile = new File(Environment.DATA_DIRECTORY, "srv.list");
 
     @SneakyThrows
