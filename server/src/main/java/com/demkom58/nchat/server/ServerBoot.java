@@ -8,8 +8,8 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -22,7 +22,7 @@ public class ServerBoot {
     private static OptionSet options;
     private static ConfigurableApplicationContext context;
 
-    public static void main(@NotNull final String... args) throws Exception {
+    public static void main(@NotNull final String... args) {
         InternalLoggerFactory.setDefaultFactory(Slf4JLoggerFactory.INSTANCE);
 
         final OptionParser optionParser = new OptionParser();
@@ -33,10 +33,7 @@ public class ServerBoot {
 
         LoggerFactory.getLogger(ServerBoot.class).info("NChat v{} is launching.", Environment.APP_VERSION);
 
-        context = new SpringApplicationBuilder()
-                .sources(ServerBoot.class)
-                .run(args);
-
+        context = SpringApplication.run(ServerBoot.class, args);
         context.getBean(Server.class).start();
     }
 
